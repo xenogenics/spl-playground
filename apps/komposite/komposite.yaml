@@ -1,0 +1,14 @@
+apiVersion: streams.ibm.com/v1
+kind: Job
+metadata:
+  name: komposite
+spec:
+  bundle:
+    name: apps.komposite.Komposite.sab
+    url: https://github.com/xguerin/spl-playground/releases/download/v0.2.0/apps.komposite.Komposite.sab
+  fusion:
+    manual: 3
+  submissionTimeValues:
+    width1: 2
+    width2: 5
+    width3: 4

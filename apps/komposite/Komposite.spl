@@ -1,0 +1,107 @@
+/*
+ * Copyright (c) 2021 Xavier R. Guérin xguerin@users.noreply.github.com
+ * 
+ * Permission to use, copy, modify, and distribute this software for any purpose
+ * with or without fee is hereby granted, provided that the above copyright
+ * notice and this permission notice appear in all copies.
+ * 
+ * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES WITH
+ * REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY
+ * AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY SPECIAL, DIRECT,
+ * INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM
+ * LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR
+ * OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
+ * PERFORMANCE OF THIS SOFTWARE.
+ */
+
+namespace apps.komposite;
+
+composite Inner0(input In; output Out) {
+  param 
+
+  expression<int32> $width1: (int32)getSubmissionTimeValue("width1", "1");
+  expression<int32> $width2: (int32)getSubmissionTimeValue("width2", "1");
+  expression<int32> $width3: (int32)getSubmissionTimeValue("width3", "1");
+
+  graph
+
+  @parallel(width=$width1)
+  stream<uint64 i> R1 = Functor(In) {}
+
+  @parallel(width=$width2)
+  stream<uint64 i> R2 = Functor(R1) {}
+
+  @parallel(width=$width3)
+    stream<uint64 i> Out = Functor(R2) {}
+}
+
+composite Inner1(input In; output Out) {
+  param 
+
+  expression<int32> $width1: (int32)getSubmissionTimeValue("width1", "1");
+  expression<int32> $width2: (int32)getSubmissionTimeValue("width2", "1");
+  expression<int32> $width3: (int32)getSubmissionTimeValue("width3", "1");
+
+  graph
+
+  @parallel(width=$width1)
+  stream<uint64 i> R01 = Functor(In) {}
+
+  @parallel(width=$width2)
+  stream<uint64 i> R02 = Functor(R01) {}
+
+  @parallel(width=$width3)
+  stream<uint64 i> R03 = Functor(R02) {}
+
+  @parallel(width=$width1)
+  stream<uint64 i> R11 = Functor(In) {}
+
+  @parallel(width=$width2)
+  stream<uint64 i> R12 = Functor(R11) {}
+
+  @parallel(width=$width3)
+  stream<uint64 i> R13 = Functor(R12) {}
+
+  stream<uint64 i> Out = Custom(R03 as A; R13 as B) {
+    logic
+
+    onTuple A: {
+      submit({ i = A.i }, Out);
+    }
+
+    onTuple B: {
+      submit({ i = B.i }, Out);
+    }
+  }
+}
+
+composite Komposite {
+  graph
+
+  stream<uint64 i> External = Import() {
+    param
+
+    applicationName: "apps.comp::Exporter";
+    streamId: "imported";
+  }
+
+  stream<uint64 i> Source = Beacon() {
+    output Source: i=IterationCount();
+  }
+
+  stream<uint64 i> Bridge = Functor(External) { }
+
+  stream<uint64 i> P0 = Inner0(Source, Bridge) { }
+
+  stream<uint64 i> P1 = Inner1(Source) { }
+
+  () as Sink0 = Custom(P0, P1 as In) {}
+
+  () as Sink1 = Custom(P0; P1) {}
+
+  stream<uint64 i> Combiner = Functor(P0, P1) {}
+
+  () as Sink2 = Export(Combiner) {
+    param streamId: "exported";
+  }
+}

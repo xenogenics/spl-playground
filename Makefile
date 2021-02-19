@@ -24,7 +24,7 @@ BUILD_TYPE ?= debug
 
 .PHONY: all clean 
 
-all: custommetrics dynamic parallel pubsub
+all: custommetrics dynamic komposite parallel pubsub
 
 clean:
 	@rm -rf build toolkit.xml
@@ -46,6 +46,14 @@ dynamic: apps/dynamic/DynamicUDPSimple.spl
 		$(DOCKER_REGISTRY)/$(DOCKER_NAMESPACE)/streams-runtime:6.$(BUILD_TYPE) \
 		doas $(shell id -u) $(shell id -g) $(PWD) \
 		make dynamic
+
+komposite: apps/komposite/Komposite.spl
+	@docker run -it --rm \
+		-v $(PWD):$(PWD):rw \
+		-v $(HOME)/.m2:/home/builder/.m2:rw \
+		$(DOCKER_REGISTRY)/$(DOCKER_NAMESPACE)/streams-runtime:6.$(BUILD_TYPE) \
+		doas $(shell id -u) $(shell id -g) $(PWD) \
+		make komposite
 
 parallel: apps/parallel/Parallel.spl
 	@docker run -it --rm \
@@ -77,6 +85,13 @@ dynamic: apps/dynamic/DynamicUDPSimple.spl
 		$(SPLC_FLAGS) \
 		--output-dir=build/dynamic \
 		-M apps.dynamic::DynamicUDPSimple \
+		$(SPL_CMD_ARGS)
+
+komposite: apps/komposite/Komposite.spl
+	@$(STREAMS_INSTALL)/bin/sc \
+		$(SPLC_FLAGS) \
+		--output-dir=build/komposite \
+		-M apps.komposite::Komposite \
 		$(SPL_CMD_ARGS)
 
 parallel: apps/parallel/Parallel.spl
