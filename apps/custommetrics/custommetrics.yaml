@@ -1,0 +1,10 @@
+apiVersion: streams.ibm.com/v1
+kind: Job
+metadata:
+  name: metrics
+spec:
+  bundle:
+    name: apps.custommetrics.CustomMetrics.sab
+    url: https://github.com/xguerin/spl-playground/releases/download/v0.1.0/apps.custommetrics.CustomMetrics.sab
+  fusion:
+    manual: 2

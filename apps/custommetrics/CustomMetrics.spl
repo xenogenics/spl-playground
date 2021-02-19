@@ -1,0 +1,77 @@
+/*
+ * Copyright (c) 2021 Xavier R. Guérin xguerin@users.noreply.github.com
+ * 
+ * Permission to use, copy, modify, and distribute this software for any purpose
+ * with or without fee is hereby granted, provided that the above copyright
+ * notice and this permission notice appear in all copies.
+ * 
+ * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES WITH
+ * REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY
+ * AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY SPECIAL, DIRECT,
+ * INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM
+ * LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR
+ * OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
+ * PERFORMANCE OF THIS SOFTWARE.
+ */
+
+namespace apps.custommetrics;
+
+boolean isPow2(uint64 x) {
+  return (x & (x-1lu)) == 0lu;
+}
+
+composite CustomMetrics {
+graph
+  stream<uint64 i> Source = Beacon() {
+    output Source: i=IterationCount();
+  }
+
+  stream<uint64 i> Op1 = Custom(Source) {
+    logic state: {
+      mutable boolean _first = false;
+      mutable int64 _evens = 0;
+      mutable int64 _millions = 0;
+      mutable int64 _posMillions = 0;
+      mutable int64 _lastPow2 = 0;
+    }
+
+    onTuple Source: {
+      if (!_first) {
+        createCustomMetric("num_evens",
+            "Number of even numbers",
+            Sys.Counter,
+            0l);
+        createCustomMetric("num_millions",
+            "Number of multiples of one million",
+            Sys.Counter,
+            0l);
+        createCustomMetric("pos_millions",
+            "Position within the current million",
+            Sys.Gauge,
+            0l);
+        createCustomMetric("last_pow2",
+            "Last power of 2 we saw",
+            Sys.Counter,
+            0l);
+        _first = true;
+      }
+
+      if (i % 2lu == 0lu) {
+        ++_evens;
+        setCustomMetricValue("num_evens", _evens);
+      }
+      if (i % 1000000lu == 0lu) {
+        ++_millions;
+        setCustomMetricValue("num_millions", _millions);
+      }
+      if (isPow2(i)) {
+        _lastPow2 = (int64)i;
+        setCustomMetricValue("last_pow2", _lastPow2);
+      }
+
+      setCustomMetricValue("pos_millions", (int64)(i % 1000000lu));
+    }
+  }
+
+  () as Sink = Custom(Op1) {}
+}

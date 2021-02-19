@@ -1,0 +1,47 @@
+/*
+ * Copyright (c) 2021 Xavier R. Guérin xguerin@users.noreply.github.com
+ * 
+ * Permission to use, copy, modify, and distribute this software for any purpose
+ * with or without fee is hereby granted, provided that the above copyright
+ * notice and this permission notice appear in all copies.
+ * 
+ * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES WITH
+ * REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY
+ * AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY SPECIAL, DIRECT,
+ * INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM
+ * LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR
+ * OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
+ * PERFORMANCE OF THIS SOFTWARE.
+ */
+
+namespace apps.parallel;
+
+composite Work(input In; output Region3) {
+param
+  expression<int32> $width1: (int32)getSubmissionTimeValue("width1", "1");
+  expression<int32> $width2: (int32)getSubmissionTimeValue("width2", "1");
+  expression<int32> $width3: (int32)getSubmissionTimeValue("width3", "1");
+graph
+  @parallel(width=$width1)
+  stream<uint64 i> Region1 = Functor(In) {}
+
+  @parallel(width=$width2)
+  stream<uint64 i> Region2 = Functor(Region1) {}
+
+  @parallel(width=$width3)
+  stream<uint64 i> Region3 = Functor(Region2) {}
+}
+
+composite Parallel {
+param 
+  expression<float64> $period: (float64)getSubmissionTimeValue("period", "0");
+graph
+  stream<uint64 i> Source = Beacon() {
+    param period: $period;
+    output Source: i=IterationCount();
+  }
+
+  stream<uint64 i> Result = Work(Source) {}
+
+  () as Sink = Custom(Result) {}
+}

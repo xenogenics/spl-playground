@@ -1,0 +1,14 @@
+apiVersion: streams.ibm.com/v1
+kind: Job
+metadata:
+  name: parallel
+spec:
+  bundle:
+    name: apps.parallel.Parallel.sab
+    url: https://github.com/xguerin/spl-playground/releases/download/v0.1.0/apps.parallel.Parallel.sab
+  fusion:
+    manual: 3
+  submissionTimeValues:
+    width1: 2
+    width2: 5
+    width3: 4
