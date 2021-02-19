@@ -1,0 +1,10 @@
+apiVersion: streams.ibm.com/v1
+kind: Job
+metadata:
+  name: dynamic
+spec:
+  bundle:
+    name: apps.dynamic.DynamicUDPSimple.sab
+    url: https://github.com/xguerin/spl-playground/releases/download/v0.2.0/apps.dynamic.DynamicUDPSimple.sab
+  fusion:
+    legacy: true

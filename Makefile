@@ -24,7 +24,7 @@ BUILD_TYPE ?= debug
 
 .PHONY: all clean 
 
-all: custommetrics parallel
+all: custommetrics dynamic parallel
 
 clean:
 	@rm -rf build toolkit.xml
@@ -38,6 +38,14 @@ custommetrics: apps/custommetrics/CustomMetrics.spl
 		$(DOCKER_REGISTRY)/$(DOCKER_NAMESPACE)/streams-runtime:6.$(BUILD_TYPE) \
 		doas $(shell id -u) $(shell id -g) $(PWD) \
 		make custommetrics
+
+dynamic: apps/dynamic/DynamicUDPSimple.spl
+	@docker run -it --rm \
+		-v $(PWD):$(PWD):rw \
+		-v $(HOME)/.m2:/home/builder/.m2:rw \
+		$(DOCKER_REGISTRY)/$(DOCKER_NAMESPACE)/streams-runtime:6.$(BUILD_TYPE) \
+		doas $(shell id -u) $(shell id -g) $(PWD) \
+		make dynamic
 
 parallel: apps/parallel/Parallel.spl
 	@docker run -it --rm \
@@ -54,6 +62,13 @@ custommetrics: apps/custommetrics/CustomMetrics.spl
 		$(SPLC_FLAGS) \
 		--output-dir=build/custommetrics \
 		-M apps.custommetrics::CustomMetrics \
+		$(SPL_CMD_ARGS)
+
+dynamic: apps/dynamic/DynamicUDPSimple.spl
+	@$(STREAMS_INSTALL)/bin/sc \
+		$(SPLC_FLAGS) \
+		--output-dir=build/dynamic \
+		-M apps.dynamic::DynamicUDPSimple \
 		$(SPL_CMD_ARGS)
 
 parallel: apps/parallel/Parallel.spl
