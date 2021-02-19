@@ -1,0 +1,23 @@
+apiVersion: streams.ibm.com/v1
+kind: Job
+metadata:
+  name: exporter
+spec:
+  bundle:
+    name: apps.pubsub.Exporter.sab
+    url: https://github.com/xguerin/spl-playground/releases/download/v0.2.0/apps.pubsub.Exporter.sab
+  submissionTimeValues:
+      delayInTuple: 120
+      portId: 0
+---
+apiVersion: streams.ibm.com/v1
+kind: Job
+metadata:
+  name: importer
+spec:
+  bundle:
+    name: apps.pubsub.Importer.sab
+    url: https://github.com/xguerin/spl-playground/releases/download/v0.2.0/apps.pubsub.Importer.sab
+  submissionTimeValues:
+      delayInTuple: 120
+...

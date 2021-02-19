@@ -1,0 +1,106 @@
+/*
+ * Copyright (c) 2021 Xavier R. Guérin xguerin@users.noreply.github.com
+ * 
+ * Permission to use, copy, modify, and distribute this software for any purpose
+ * with or without fee is hereby granted, provided that the above copyright
+ * notice and this permission notice appear in all copies.
+ * 
+ * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES WITH
+ * REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY
+ * AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY SPECIAL, DIRECT,
+ * INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM
+ * LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR
+ * OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
+ * PERFORMANCE OF THIS SOFTWARE.
+ */
+
+namespace apps.pubsub;
+
+composite Exporter {
+  param 
+
+  expression<uint32> $portId: (uint32)getSubmissionTimeValue("portId", "0");
+  expression<uint64> $delayInTuple: (uint64)getSubmissionTimeValue("delayInTuple", "60");
+
+  type
+
+  Property = tuple<rstring name, rstring value, rstring typ>;
+  PropertyList = list<Property>;
+
+  graph
+
+  stream<int32 i> EntertainmentSectorBargains = Beacon() {
+    param period: 1.0;
+  }
+
+  () as ExportOp0 = Export(EntertainmentSectorBargains) {
+    param streamId : "entSectorBargains";
+  }
+
+  stream<uint64 i> TechSectorBargains = Beacon() {
+    param period: 1.0;
+    output TechSectorBargains: i = IterationCount();
+  }
+
+  stream<TSB> Bump = Custom(TechSectorBargains as TSB) {
+    logic
+
+    state: {
+      mutable PropertyList properties;
+    }
+
+    onTuple TSB: {
+      /*
+       * getOutputPortExportProperties
+       */
+      mutable int32 result = getOutputPortExportProperties(properties, $portId);
+      printString("getOutputPortExportProperties on port ID: ");
+      print($portId);
+      printString(" returned: ");
+      println(result);
+      for (Property p in properties) {
+        println(p);
+      }
+      /*
+       * Update the properties.
+       */
+      println(TSB);
+      if (TSB.i == $delayInTuple) {
+        result = setOutputPortExportProperties({
+            kind     = "bargains",
+            category = "technology",
+            tickers  = [ "IBM" ] }, $portId);
+        printString("setOutputPortExportProperties on port ID: ");
+        print($portId);
+        printString(" returned: ");
+        println(result);
+      }
+      /*
+       * Forward the tuple.
+       */
+      submit({ i = TSB.i }, Bump);
+    }
+  }
+
+  () as ExportOp1 = Export(Bump) {
+    param properties : {
+      kind     = "bargains",
+      category = "tech",
+      tickers  = [ "IBM", "GOOG", "MSFT" ]
+    };
+  }
+
+  stream<int32 i> HealthCareSectorBargains = Beacon() {
+    param period: 1.0;
+  }
+
+  () as ExportOp2 = Export(HealthCareSectorBargains) {
+    param streamId : "hcSectorBargains";
+  }
+
+  stream<int32 i> VideoGameSectorBargains = Beacon() {
+    param period: 1.0;
+  }
+
+  () as ExportOp3 = Export(VideoGameSectorBargains) { }
+}

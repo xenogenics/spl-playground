@@ -1,0 +1,88 @@
+/*
+ * Copyright (c) 2021 Xavier R. Guérin xguerin@users.noreply.github.com
+ * 
+ * Permission to use, copy, modify, and distribute this software for any purpose
+ * with or without fee is hereby granted, provided that the above copyright
+ * notice and this permission notice appear in all copies.
+ * 
+ * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES WITH
+ * REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY
+ * AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY SPECIAL, DIRECT,
+ * INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM
+ * LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR
+ * OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
+ * PERFORMANCE OF THIS SOFTWARE.
+ */
+
+namespace apps.pubsub;
+
+composite Importer {
+  param 
+
+  expression<uint32> $delayInTuple: (uint32)getSubmissionTimeValue("delayInTuple", "60");
+
+  graph
+    stream<int32 i> EntertainmentBargains = Import() {
+      param
+
+      applicationName: "apps.pubsub::Exporter";
+      streamId : "entSectorBargains";
+    }
+
+  stream<int32 i> HealthCareBargains = Import() {
+    param 
+
+    applicationName: "apps.pubsub::Exporter";
+    streamId : "hcSectorBargains";
+  }
+
+  stream<int32 i> TechBargains = Import() {
+    param subscription : kind == "bargains" && category == "tech";
+  }
+
+  () as Sink0 = Custom(EntertainmentBargains, HealthCareBargains, TechBargains as INPUT) {
+    logic
+
+    onTuple INPUT: {
+      mutable int32 error = 0;
+      mutable rstring res;
+      /*
+       * Call getInputPortImportSubscription on port 0.
+       */
+      res = getInputPortImportSubscription(0u, error);
+      printString("Sink0: getInputPortImportSubscription on port 0 returns ");
+      printString(res); printString(", "); println(error);
+      /*
+       * Call getInputPortImportSubscription on port 1.
+       */
+      res = getInputPortImportSubscription(1u, error);
+      printString("Sink0: getInputPortImportSubscription on port 1 returns ");
+      printString(res); printString(", "); println(error);
+      /*
+       * Call getInputPortImportSubscription on port 2.
+       */
+      res = getInputPortImportSubscription(1u, error);
+      printString("Sink0: getInputPortImportSubscription on port 2 returns ");
+      printString(res); printString(", "); println(error);
+    }
+  }
+
+  () as Sink1 = Custom(EntertainmentBargains; HealthCareBargains as HCB; TechBargains) {
+    logic
+
+    state: {
+      mutable uint32 inputCount = 0;
+    }
+
+    onTuple HCB: {
+      inputCount += 1u;
+      println(inputCount);
+      if (inputCount == $delayInTuple) {
+        rstring subs = "kind == \"bargains\" && category == \"technology\"";
+        int32 res = setInputPortImportSubscription(subs, 2u);
+        printString("Sink1: setInputPortImportSubscription on port 2 returns ");
+        println(res);
+      }
+    }
+  }
+}
