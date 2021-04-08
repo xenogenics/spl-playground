@@ -14,13 +14,13 @@
 # PERFORMANCE OF THIS SOFTWARE.
 #
 
-DOCKER_NAMESPACE ?= $(USER)
-DOCKER_REGISTRY ?= localhost:5000
+DOCKER_NAMESPACE ?= openstreams
+DOCKER_REGISTRY ?= docker.io
 
 SPLC_FLAGS = -a
 SPL_CMD_ARGS ?= 
 
-BUILD_TYPE ?= debug
+BUILD_TYPE ?= release
 
 .PHONY: all clean 
 
