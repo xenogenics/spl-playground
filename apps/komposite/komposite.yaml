@@ -5,7 +5,8 @@ metadata:
 spec:
   bundle:
     name: apps.komposite.Komposite.sab
-    url: https://github.com/xguerin/spl-playground/releases/download/v0.2.0/apps.komposite.Komposite.sab
+    github:
+      url: https://github.com/xguerin/spl-playground/releases/download/v0.2.0/apps.komposite.Komposite.sab
   fusion:
     manual: 3
   submissionTimeValues:

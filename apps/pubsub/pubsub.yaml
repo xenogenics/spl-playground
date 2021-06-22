@@ -5,7 +5,8 @@ metadata:
 spec:
   bundle:
     name: apps.pubsub.Exporter.sab
-    url: https://github.com/xguerin/spl-playground/releases/download/v0.2.0/apps.pubsub.Exporter.sab
+    github:
+      url: https://github.com/xguerin/spl-playground/releases/download/v0.2.0/apps.pubsub.Exporter.sab
   submissionTimeValues:
       delayInTuple: 120
       portId: 0
@@ -17,7 +18,8 @@ metadata:
 spec:
   bundle:
     name: apps.pubsub.Importer.sab
-    url: https://github.com/xguerin/spl-playground/releases/download/v0.2.0/apps.pubsub.Importer.sab
+    github:
+      url: https://github.com/xguerin/spl-playground/releases/download/v0.2.0/apps.pubsub.Importer.sab
   submissionTimeValues:
       delayInTuple: 120
 ...
