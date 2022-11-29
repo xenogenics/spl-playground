@@ -8,8 +8,8 @@ spec:
     github:
       url: https://github.com/xguerin/spl-playground/releases/download/v0.1.0/apps.parallel.Parallel.sab
   fusion:
-    manual: 3
+    legacy: true
   submissionTimeValues:
-    width1: 2
-    width2: 5
-    width3: 4
+    width1: 1
+    width2: 1
+    width3: 1
